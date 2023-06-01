@@ -1,54 +1,44 @@
-const tSlider = document.querySelector('#tSlider');
+const app = new App();
+app.run();
 
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const bezier = new Bezier();
-bezier.resolution = 1000;
-bezier.color = "#45D2FF";
-
-const mouseMoveCallback = (event) => {
-    bezier.movePoint(event.clientX, event.clientY);
-};
-
-window.addEventListener('keyup', function (event) {
-    if (event.key === 'Delete') {
-        bezier.deleteSelectedPoint();
-    }
+const inputs = document.querySelectorAll('input');
+inputs.forEach((input) => {
+    input.addEventListener('click', (event) => {
+        const clickedInput = event.target;
+        inputs.forEach((input) => {
+            input.classList.remove('selected');
+        });
+        clickedInput.classList.add('selected');
+        app.selected = clickedInput.value;
+    });
 });
 
-canvas.addEventListener('mousedown', function (event) {
-    if (event.ctrlKey) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        let x = event.clientX;
-        let y = event.clientY;
-        let p = new Point(x, y);
-        bezier.addPoint(p);
-    } else if (event.shiftKey) {
-        bezier.selectPoint(event.clientX, event.clientY);
-        canvas.addEventListener('mousemove', mouseMoveCallback);
-    } else {
-        bezier.selectPoint(event.clientX, event.clientY);
-        console.log(bezier.tempLines);
-    }
-});
+// const mouseMoveCallback = (event) => {
+//     bezier.moveSelected(event.clientX, event.clientY);
+// };
 
-canvas.addEventListener('mouseup', function (event) {
-    canvas.removeEventListener('mousemove', mouseMoveCallback);
-});
+// window.addEventListener('keyup', function (event) {
+//     if (event.key === 'Delete') {
+//         bezier.deleteSelectedPoint();
+//     }
+// });
 
-tSlider.addEventListener('input', function (event) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bezier.tValue = event.target.value / bezier.resolution;
-});
-
-function update() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bezier.draw(ctx);
-    requestAnimationFrame(update);
-}
-update();
-
+// window.addEventListener('keydown', function (event) {
+//     let tIncrement = 10;
+//     if(event.ctrlKey){
+//         tIncrement = 1;
+//     } 
+//     if(event.key === 'ArrowLeft') {
+//         bezier.moveSelectedBy(-tIncrement, 0);
+//     }
+//     if(event.key === 'ArrowRight') {
+//         bezier.moveSelectedBy(tIncrement, 0);
+//     }
+//     if(event.key === 'ArrowUp') {
+//         bezier.moveSelectedBy(0, -tIncrement);
+//     }
+//     if(event.key === 'ArrowDown') {
+//         bezier.moveSelectedBy(0, tIncrement);
+//     }
+// });
 

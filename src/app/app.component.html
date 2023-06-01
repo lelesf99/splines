@@ -1,0 +1,11 @@
+<menu type="toolbar">
+  <button (click)="mode = 'point'">Point</button>
+  <button (click)="mode = 'line'">line</button>
+  <button>Bezier</button>
+</menu>
+<canvas #canvas
+  (click)="mouseClick($event)"
+  (mousedown)="mouseDown($event)"
+  (mouseup)="mouseUp($event)"
+  (mousemove)="mouseMove($event)"
+></canvas>

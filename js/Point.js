@@ -48,4 +48,10 @@ class Point {
         this.x = x;
         this.y = y;
     }
+    distanceTo(x, y) {
+        return Math.sqrt(Math.pow(x - this.x, 2) + Math.pow(y - this.y, 2));
+    }
+    distanceBetween(point) {
+        return this.distanceTo(point.x, point.y);
+    }
 }

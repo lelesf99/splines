@@ -6,24 +6,23 @@ class Bezier {
         this.tValue = 1.0;
         this.tIncrement = 1 / this.resolution;
 
-        this.color = "white";
-        this.lineWidth = 2;
-
         this.lines = [];
         this.tempLines = [];
+
+        this.curve = new Curve();
+
+        this.color = "white";
+        this.lineWidth = 2;
     }
 
     addPoint(point) {
-        const lastPoint = this.points[this.points.length - 1];
         this.points.push(point);
-        const newPoint = this.points[this.points.length - 1];
-        if (this.points.length > 1)
-            this.lines.push(new Line(lastPoint, newPoint));
+        this.updateLines();
+        this.updateCurve();
     }
 
     draw(ctx) {
         if (this.points.length === 0) return;
-
 
         // Draw points
         for (let i = 0; i < this.points.length; i++) {
@@ -38,25 +37,9 @@ class Bezier {
         }
 
         // draw bezier curve
-        ctx.beginPath();
-        ctx.moveTo(this.points[0].x, this.points[0].y);
-
-        for (let tempT = 0; tempT <= this.tValue; tempT += this.tIncrement) {
-            const tempTPoint = this.calculateTPoint(this.lines, tempT);
-            // console.log(tPoint);
-            ctx.lineTo(tempTPoint.x, tempTPoint.y);
-            ctx.moveTo(tempTPoint.x, tempTPoint.y);
-        }
-        const currentColor = ctx.fillStyle;
-        const currentLineWidth = ctx.lineWidth;
-        ctx.strokeStyle = this.color;
-        ctx.fillStyle = this.color;
-        ctx.lineWidth = this.lineWidth;
-        ctx.stroke();
-
-        ctx.fillStyle = currentColor;
-        ctx.strokeStyle = currentColor;
-        ctx.lineWidth = currentLineWidth;
+        this.curve.color = this.color;
+        this.curve.lineWidth = this.lineWidth;
+        this.curve.draw(ctx);
 
         // Draw tPoint
         this.tempLines = [];
@@ -72,7 +55,6 @@ class Bezier {
             this.tempLines[i].lineWidth = 1;
             this.tempLines[i].draw(ctx);
         }
-
 
     }
 
@@ -95,6 +77,33 @@ class Bezier {
         }
     }
 
+    select(x, y) {
+        const selection = {
+            point: this.selectPoint(x, y),
+            line: this.selectLine(x, y),
+            curve: this.selectCurve(x, y)
+        }
+        if(selection.point === this.points[0] || selection.point === this.points[this.points.length - 1]) this.curve.deselect();
+        if (selection.point) return selection.point;
+        if (selection.curve) return selection.curve;
+        if (selection.line) return selection.line;
+        return null;
+    }
+
+    selectCurve(x, y) {
+        if (this.curve.isHovering(x, y)) {
+            this.curve.select();
+            return this.curve;
+        } else {
+            this.curve.deselect();
+            return null;
+        }
+    }
+
+    selectLine(x, y) {
+        return null;
+    }
+
     selectPoint(x, y) {
         let selectedPoint = null;
         for (let i = 0; i < this.points.length; i++) {
@@ -108,6 +117,24 @@ class Bezier {
         return selectedPoint;
     }
 
+    updateLines() {
+        this.lines = [];
+        if (this.points.length > 1) {
+            for (let i = 0; i < this.points.length - 1; i++) {
+                this.lines.push(new Line(this.points[i], this.points[i + 1]));
+            }
+        }
+    }
+    updateCurve() {
+        this.curve.points = [];
+        if (this.points.length > 1) {
+            for (let tempT = 0; tempT <= this.tValue; tempT += this.tIncrement) {
+                const tempTPoint = this.calculateTPoint(this.lines, tempT);
+                this.curve.addPoint(tempTPoint);
+            }
+        }
+    }
+
     deleteSelectedPoint() {
         const tempPoints = this.points.filter(point => !point.selected);
         const tempLines = [];
@@ -118,11 +145,26 @@ class Bezier {
         this.lines = tempLines;
     }
 
-    movePoint(x, y) {
+    moveSelected(x, y) {
         const selectedPoint = this.points.find(point => point.selected);
         if (selectedPoint) {
             selectedPoint.moveTo(x, y);
+            this.updateLines();
+            this.updateCurve();
         }
     }
-
+    moveSelectedBy(x, y) {
+        const selectedPoint = this.points.find(point => point.selected);
+        if (selectedPoint && !this.curve.selected) {
+            selectedPoint.moveTo(selectedPoint.x + x, selectedPoint.y + y);
+            this.updateLines();
+            this.updateCurve();
+        }
+        if (this.curve.selected) {
+            this.tValue += x / this.resolution;
+            if(this.tValue < 0) this.tValue = 0;
+            if(this.tValue > 1) this.tValue = 1;
+            this.updateCurve();
+        }
+    }
 }
