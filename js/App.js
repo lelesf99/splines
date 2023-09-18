@@ -1,86 +1,199 @@
 class App {
     constructor() {
-        this.selected = 'bezier';
+        this.setMode('point');
         this.selectedObj = 'white';
-        this.canvas = document.querySelector('canvas');
-        this.ctx = this.canvas.getContext('2d');
+        
+        this.screen = new Screen();
 
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.points = [];
+        this.lines = [];
+        this.beziers = [];
+        this.bezier = new Bezier();
+        this.spline = new Spline();
+        this.curve = new Curve();
 
-        const bezier = new Bezier();
-        bezier.addPoint(new Point(this.canvas.width - 100, this.canvas.height - 100));
-        bezier.addPoint(new Point(this.canvas.width - 100, 100));
-        bezier.addPoint(new Point(100, this.canvas.height - 100));
-        bezier.addPoint(new Point(100, 100));
+        // this.screen.canvas.addEventListener('mousedown', this.mouseDown.bind(this));
 
-        this.beziers = [bezier];
+        // this.screen.canvas.addEventListener('mouseup', this.mouseUp.bind(this));
 
-        this.canvas.addEventListener('mousedown', this.input.bind(this));
+        // this.screen.canvas.addEventListener('mousemove', this.mouseMove.bind(this));
+        
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'p') {
+                this.mode = 'point';
+            }
+            if (event.key === 'l') {
+                this.mode = 'line';
+            }
+            if (event.key === 'c') {
+                this.mode = 'curve';
+            }
+            if (event.key === 'b') {
+                this.mode = 'bezier';
+            }
+            if (event.key === 's') {
+                this.mode === 'spline'
+            }
+            if (this.mode === 'bezier') {
+                if (event.key === 'ArrowLeft') {
+                    if (event.ctrlKey)
+                        this.bezier.incrementTValue(-1);
+                    else
+                        this.bezier.incrementTValue(-10);
+                }
+                if (event.key === 'ArrowRight') {
+                    if (event.ctrlKey)
+                        this.bezier.incrementTValue();
+                    else
+                        this.bezier.incrementTValue(10);
+                }
+            }
+            if (this.mode === 'spline') {
+                if (event.key === 'ArrowLeft') {
+                    if (event.ctrlKey)
+                        this.spline.incrementUValue(-1);
+                    else
+                        this.spline.incrementUValue(-10);
+                }
+                if (event.key === 'ArrowRight') {
+                    if (event.ctrlKey)
+                        this.spline.incrementUValue();
+                    else
+                        this.spline.incrementUValue(10);
+                }
+            }
+        });
 
-        this.canvas.addEventListener('mouseup', this.input.bind(this));
-
-        this.canvas.addEventListener('mousemove', this.input.bind(this));
+        document.querySelectorAll('.mode-btn').forEach((element) => {
+            element.addEventListener('click', (event) => {
+                this.setMode(event.target.id);
+            });
+        });
     }
-    input(event) {
-        switch (event.type) {
-            case 'mousedown':
-                this.mouseDown(event);
-                break;
-            case 'mouseup':
-                this.mouseUp(event);
-                break;
-            case 'mousemove':
-                this.mouseMove(event);
-                break;
-            default:
-                break;
+    addPoint(x, y) {
+        this.points.push(new Point(x, y));
+    }
+    addLine(x, y) {
+        if (this.points.length === 0) {
+            this.addPoint(x, y);
+        } else {
+            const lastPoint = this.points[this.points.length - 1];
+            this.addPoint(x, y);
+            this.lines.push(new Line(lastPoint, this.points[this.points.length - 1]));
         }
     }
-    addBezier(bezier) {
-        this.beziers.push(bezier);
+    addBezier(x, y) {
+        if (this.points.length === 0) {
+            this.addLine(x, y);
+        } else {
+            this.addLine(x, y);
+            const newBezier = new Bezier(this.lines[this.lines.length - 1]);
+            this.beziers.push(newBezier);
+        }
     }
+
     select(x, y) {
-        for (let i = 0; i < this.beziers.length; i++) {
-            this.beziers.select(x, y);
-        }
+        this.points.forEach((point) => {
+            point.select(x, y);
+        });
     }
-    draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        for (let i = 0; i < this.beziers.length; i++) {
-            this.beziers[i].draw(this.ctx);
-        }
+    startMove(x, y) {
+        this.points.forEach((point) => {
+            if (point.selected) {
+                point.startMove(x, y);
+            }
+        });
+    }
+    stopMove(x, y) {
+        this.points.forEach((point) => {
+            if (point.selected) {
+                point.stopMove(x, y);
+            }
+        });
+    }
+
+    move(x, y) {
+        this.points.forEach((point) => {
+            if (point.moving) {
+                point.moveTo(x, y);
+            }
+        });
+        this.beziers.forEach((bezier) => {
+            bezier.updateCurve();
+        });
+
     }
     run() {
-        this.draw();
+        this.screen.draw();
         requestAnimationFrame(this.run.bind(this));
     }
 
     mouseDown(event) {
-        switch (this.selected) {
-            case 'bezier':
-                this.canvas.addEventListener('mousemove', this.input.bind(this));
-                break;
-            default:
-                break;
+        if (event.shiftKey) {
+            this.select(event.clientX, event.clientY);
+            this.startMove(event.clientX, event.clientY);
         }
     }
     mouseUp(event) {
-        switch (this.selected) {
-            case 'bezier':
-                this.canvas.removeEventListener('mousemove', this.input.bind(this));
-                this.select(event.target.clientX, event.target.clientY);
-                break;
-            default:
-                break;
+        if (event.ctrlKey) {
+            if (this.mode === 'point') {
+                this.addPoint(event.clientX, event.clientY);
+            }
+            if (this.mode === 'line') {
+                this.addLine(event.clientX, event.clientY);
+            }
+            if (this.mode === 'curve') {
+                this.addPoint(event.clientX, event.clientY);
+                const lastPoint = this.points[this.points.length - 1];
+                this.curve.coords.push([lastPoint.pos[0], lastPoint.pos[1]]);
+            }
+            if (this.mode === 'bezier') {
+                if (this.lines.length === 0) {
+                    this.addLine(event.clientX, event.clientY);
+                } else {
+                    this.addLine(event.clientX, event.clientY);
+                    const lastLine = this.lines[this.lines.length - 1];
+                    this.bezier.addLine(lastLine);
+                }
+            }
+            if (this.mode === 'spline') {
+                if (this.points.length === 0) {
+                    this.addBezier(event.clientX, event.clientY);
+                } else {
+                    if (this.beziers.length === 0) {
+                        this.addBezier(event.clientX, event.clientY);
+                        const lastBezier = this.beziers[this.beziers.length - 1];
+                        lastBezier.addLine(this.lines[this.lines.length - 1]);
+                        this.spline.addBezier(this.beziers[this.beziers.length - 1]);
+                    } else {
+                        const lastBezier = this.beziers[this.beziers.length - 1];
+                        if (lastBezier.lines.length === 3) {
+                            this.addBezier(event.clientX, event.clientY);
+                            const lastBezier = this.beziers[this.beziers.length - 1];
+                            lastBezier.addLine(this.lines[this.lines.length - 1]);
+                            this.spline.addBezier(this.beziers[this.beziers.length - 1]);
+                        } else {
+                            this.addLine(event.clientX, event.clientY);
+                            lastBezier.addLine(this.lines[this.lines.length - 1]);
+                        }
+                    }
+                }
+            }
+        } else {
+            this.stopMove(event.clientX, event.clientY);
+            this.select(event.clientX, event.clientY);
         }
     }
     mouseMove(event) {
-        switch (this.selected) {
-            case 'bezier':
-                break;
-            default:
-                break;
+        if (event.shiftKey) {
+            this.move(event.clientX, event.clientY);
         }
+    }
+    setMode(mode) {
+        this.mode = mode;
+        document.querySelectorAll('.mode-btn').forEach((element) => {
+            element.classList.remove('selected');
+        });
+        document.querySelector(`#${mode}`).classList.add('selected');
     }
 }

@@ -5,6 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Splines</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
     <style>
       * {
         margin: 0;
@@ -13,10 +19,10 @@
       body {
         background-color: #252535;
         color: white;
-        font-family: sans-serif;
+        font-family: 'Roboto Slab', serif;
       }
       canvas {
-        position: absolute;
+        position: fixed;
         background-color: #252535;
       }
       .controls {
@@ -29,7 +35,7 @@
       .controls input {
         width: 100%;
       }
-      .point{
+      .point {
         position: absolute;
         width: 1rem;
         height: 1rem;
@@ -37,21 +43,53 @@
         background-color: #fff;
         transform: translate(-50%, -50%);
       }
+      .menu {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 0.1rem;
+        background-color: #00000010;
+        padding: 0.4rem;
+        border-radius: 0.5rem;
+      }
+      .mode-btn {
+        font-family: 'Roboto Slab', serif;
+        font-size: 1.2rem;
+        background-color: #00000010;
+        border: none;
+        color: white;
+        padding: 0.5rem;
+        border-radius: 0.2rem;
+        cursor: pointer;
+        transition: background-color cubic-bezier(0.175, 0.885, 0.32, 1.275)
+          0.2s;
+      }
+      .mode-btn.selected {
+        background-color: #ffffffdd;
+        color: black;
+      }
     </style>
   </head>
   <body>
     <canvas></canvas>
-    <div class="controls">
-      <input type="range" name="tSlider" id="tSlider" min="0" max="1000" value="1000" />
-      <p>Mouse1 = select controlPoint</p>
-      <p>Ctrl + Mouse1 = Add controlPoint</p>
-      <p>shift + Mouse1 = Move controlPoint</p>
-      <p>Del = delete selected controlPoint</p>
-    </div>
-    <script src="js/Point.js"></script>
-    <script src="js/Line.js"></script>
-    <script src="js/Bezier.js"></script>
-    <script src="js/Mouse.js"></script>
+
+    <menu class="menu">
+      <button class="mode-btn" id="point">Ponto</button>
+      <button class="mode-btn" id="line">Linha</button>
+      <button class="mode-btn" id="curve">Curva</button>
+      <button class="mode-btn" id="bezier">Bezier</button>
+      <button class="mode-btn" id="spline">Spline</button>
+    </menu>
+
+    <script src="js/models/Point.js"></script>
+    <script src="js/models/Line.js"></script>
+    <script src="js/models/Curve.js"></script>
+    <script src="js/models/Bezier.js"></script>
+    <script src="js/models/Spline.js"></script>
+    <script src="js/models/Screen.js"></script>
+    <script src="js/App.js"></script>
     <script src="js/index.js"></script>
   </body>
 </html>
